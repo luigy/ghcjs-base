@@ -28,11 +28,11 @@ import           Data.Data
 import           Data.Int (Int8, Int16, Int32)
 import           Data.JSString.Internal.Type
 import           Data.Maybe
-import           Data.Text (Text)
+-- import           Data.Text (Text)
 import           Data.Typeable
 import           Data.Word (Word8, Word16, Word32, Word)
 import           Data.JSString
-import           Data.JSString.Text
+-- import           Data.JSString.Text
 import           Data.Bits ((.&.))
 import           Unsafe.Coerce (unsafeCoerce)
 import           GHC.Int
@@ -65,8 +65,8 @@ instance PFromJSVal JSString where pFromJSVal = JSString
                                    {-# INLINE pFromJSVal #-}
 instance PFromJSVal [Char] where pFromJSVal   = Prim.fromJSString
                                  {-# INLINE pFromJSVal #-}
-instance PFromJSVal Text   where pFromJSVal   = textFromJSVal
-                                 {-# INLINE pFromJSVal #-}
+-- instance PFromJSVal Text   where pFromJSVal   = textFromJSVal
+--                                  {-# INLINE pFromJSVal #-}
 instance PFromJSVal Char   where pFromJSVal x = C# (jsvalToChar x)
                                  {-# INLINE pFromJSVal #-}
 instance PFromJSVal Bool   where pFromJSVal   = isTruthy
@@ -103,8 +103,8 @@ instance PToJSVal JSString  where pToJSVal          = jsval
                                   {-# INLINE pToJSVal #-}
 instance PToJSVal [Char]    where pToJSVal          = Prim.toJSString
                                   {-# INLINE pToJSVal #-}
-instance PToJSVal Text      where pToJSVal          = jsval . textToJSString
-                                  {-# INLINE pToJSVal #-}
+-- instance PToJSVal Text      where pToJSVal          = jsval . textToJSString
+--                                   {-# INLINE pToJSVal #-}
 instance PToJSVal Char      where pToJSVal (C# c)   = charToJSVal c
                                   {-# INLINE pToJSVal #-}
 instance PToJSVal Bool      where pToJSVal True     = jsTrue

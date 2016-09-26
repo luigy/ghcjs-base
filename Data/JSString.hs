@@ -97,6 +97,7 @@ module Data.JSString ( JSString
                      , breakOnEnd
                      , break
                      , span
+                     , span_
                      , group
                      , group'
                      , groupBy
@@ -1125,19 +1126,23 @@ splitAt (I# n) x = case js_splitAt n x of (# y, z #) -> (y, z)
 -- of @t@ of elements that satisfy @p@, and whose second is the
 -- remainder of the list.
 span :: (Char -> Bool) -> JSString -> (JSString, JSString)
-span p x = case js_length x of
-            0# -> (empty, empty)
-            l  -> let c0 = js_uncheckedIndex 0# x
-                  in if p (C# (chr# c0)) then loop 0# l else (empty, x)
+span p x = let (# a, b #) = span_ p x in (a, b)
+{-# INLINE span #-}
+
+span_ :: (Char -> Bool) -> JSString -> (# JSString, JSString #)
+span_ p x = case js_length x of
+              0# -> (# empty, empty #)
+              l  -> let c0 = js_uncheckedIndex 0# x
+                    in if p (C# (chr# c0)) then loop 0# l else (# empty, x #)
   where
     loop i l
-      | isTrue# (i >=# l) = (x, empty)
+      | isTrue# (i >=# l) = (# x, empty #)
       | otherwise         =
           let c = js_uncheckedIndex i x
           in  if p (C# (chr# c))
               then loop (i +# charWidth c) l
-              else (js_substr 0# i x, js_substr1 i x)
-{-# INLINE span #-}
+              else (# js_substr 0# i x, js_substr1 i x #)
+{-# INLINE span_ #-}
 
 -- | /O(n)/ 'break' is like 'span', but the prefix returned is
 -- over elements that fail the predicate @p@.

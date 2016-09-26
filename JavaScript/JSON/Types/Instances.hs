@@ -57,7 +57,7 @@ import Control.Applicative ((<$>), (<*>), (<|>), pure, empty)
 
 import           Data.JSString      (JSString)
 import qualified Data.JSString      as JSS
-import qualified Data.JSString.Text as JSS
+-- import qualified Data.JSString.Text as JSS
 
 import           JavaScript.Array (JSArray)
 import qualified JavaScript.Array as JSA
@@ -335,21 +335,21 @@ instance FromJSON JSString where
     parseJSON = withJSString "JSString" pure
     {-# INLINE parseJSON #-}
 
-instance ToJSON Text where
-    toJSON = stringValue . JSS.textToJSString
-    {-# INLINE toJSON #-}
+-- instance ToJSON Text where
+--     toJSON = stringValue . JSS.textToJSString
+--     {-# INLINE toJSON #-}
 
-instance FromJSON Text where
-    parseJSON = withJSString "Text" ( pure . JSS.textFromJSString )
-    {-# INLINE parseJSON #-}
+-- instance FromJSON Text where
+--     parseJSON = withJSString "Text" ( pure . JSS.textFromJSString )
+--     {-# INLINE parseJSON #-}
 
-instance ToJSON LT.Text where
-    toJSON = stringValue . JSS.textToJSString . LT.toStrict
-    {-# INLINE toJSON #-}
+-- instance ToJSON LT.Text where
+--     toJSON = stringValue . JSS.textToJSString . LT.toStrict
+--     {-# INLINE toJSON #-}
 
-instance FromJSON LT.Text where
-    parseJSON = withJSString "Lazy Text" $ pure . LT.fromStrict . JSS.textFromJSString
-    {-# INLINE parseJSON #-}
+-- instance FromJSON LT.Text where
+--     parseJSON = withJSString "Lazy Text" $ pure . LT.fromStrict . JSS.textFromJSString
+--     {-# INLINE parseJSON #-}
 
 instance (ToJSON a) => ToJSON [a] where
     toJSON = arrayValue . arrayValueList . map toJSON

@@ -82,7 +82,7 @@ import           GHCJS.Marshal
 import           GHCJS.Marshal.Pure
 -}
 import           Data.String (IsString(..))
-import qualified Data.Text as T
+-- import qualified Data.Text as T
 
 
 class ToJSString a where

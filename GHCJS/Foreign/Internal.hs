@@ -100,10 +100,10 @@ import           Data.Typeable (Typeable)
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Unsafe (unsafePackAddressLen)
 
-import qualified Data.Text.Array as A
-import qualified Data.Text as T
-import qualified Data.Text.Internal as T
-import qualified Data.Text.Lazy as TL (Text, toStrict, fromStrict)
+-- import qualified Data.Text.Array as A
+-- import qualified Data.Text as T
+-- import qualified Data.Text.Internal as T
+-- import qualified Data.Text.Lazy as TL (Text, toStrict, fromStrict)
 
 import           Unsafe.Coerce
 

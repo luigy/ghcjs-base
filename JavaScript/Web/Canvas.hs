@@ -63,7 +63,7 @@ import Control.Monad
 
 import Data.Data
 import Data.Maybe (fromJust)
-import Data.Text (Text)
+-- import Data.Text (Text)
 import Data.Typeable
 
 import GHCJS.Foreign
