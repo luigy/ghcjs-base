@@ -40,7 +40,7 @@ if(String.prototype.codePointAt) {
     }
     h$jsstringHead = function(str) {
         TRACE_JSSTRING("(codePointAt) head: " + str);
-	var cp = ch.codePointAt(0);
+	var cp = str.codePointAt(0);
 	return (cp === undefined) ? -1 : (cp|0);
     }
     h$jsstringTail = function(str) {
@@ -63,10 +63,10 @@ if(String.prototype.codePointAt) {
     h$jsstringUncons = function(str) {
         TRACE_JSSTRING("(codePointAt) uncons: '" + str + "'");
 	var l = str.length;
-	if(l===0) return null;
+	if(l===0) return -1;
 	var ch = str.codePointAt(0);
         if(ch === undefined) {
-  	  RETURN_UBX_TUP2(null, null);
+  	  RETURN_UBX_TUP2(-1, null);
         }
         RETURN_UBX_TUP2(ch, str.substr(IS_ASTRAL(ch)?2:1));
     }
