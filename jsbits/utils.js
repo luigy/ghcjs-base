@@ -6,7 +6,7 @@ function h$allProps(o) {
     return a;
 }
 
-function h$listProps(o) {
+function h$listAllProps(o) {
     var r = HS_NIL;
     for(var p in o) { r = MK_CONS(MK_JSVAL(p), r); }
     return r;

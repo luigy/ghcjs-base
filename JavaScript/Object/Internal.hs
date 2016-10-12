@@ -87,5 +87,5 @@ foreign import javascript unsafe "$1 instanceof $2"
   js_isInstanceOf  :: Object -> JSVal -> Bool
 foreign import javascript unsafe  "h$allProps"
   js_allProps      :: Object -> IO JSArray
-foreign import javascript unsafe  "h$listProps"
+foreign import javascript unsafe  "h$listAllProps"
   js_listProps     :: Object -> IO Exts.Any -- [JSString]
