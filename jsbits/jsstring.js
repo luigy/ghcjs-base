@@ -33,6 +33,56 @@ var h$jsstringHead, h$jsstringTail, h$jsstringCons,
     h$jsstringIndex, h$jsstringUncheckedIndex,
     h$jsstringTake, h$jsstringDrop, h$jsstringTakeEnd, h$jsstringDropEnd;
 
+var h$fromCodePoint;
+
+if(String.prototype.fromCodePoint) {
+    h$fromCodePoint = String.fromCodePoint;
+} else {
+    // polyfill from https://github.com/mathiasbynens/String.fromCodePoint (MIT-license)
+    h$fromCodePoint =
+      (function() {
+          var stringFromCharCode = String.fromCharCode;
+          var floor = Math.floor;
+          return function(_) {
+              var MAX_SIZE = 0x4000;
+              var codeUnits = [];
+              var highSurrogate;
+              var lowSurrogate;
+              var index = -1;
+              var length = arguments.length;
+              if (!length) {
+                  return '';
+              }
+              var result = '';
+              while (++index < length) {
+                  var codePoint = Number(arguments[index]);
+                  if (
+                      !isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
+                      codePoint < 0 || // not a valid Unicode code point
+                      codePoint > 0x10FFFF || // not a valid Unicode code point
+                      floor(codePoint) != codePoint // not an integer
+                  ) {
+                      throw RangeError('Invalid code point: ' + codePoint);
+                  }
+                  if (codePoint <= 0xFFFF) { // BMP code point
+                      codeUnits.push(codePoint);
+                  } else { // Astral code point; split in surrogate halves
+                      // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+                      codePoint -= 0x10000;
+                      highSurrogate = (codePoint >> 10) + 0xD800;
+                      lowSurrogate = (codePoint % 0x400) + 0xDC00;
+                      codeUnits.push(highSurrogate, lowSurrogate);
+                  }
+                  if (index + 1 == length || codeUnits.length > MAX_SIZE) {
+                      result += stringFromCharCode.apply(null, codeUnits);
+                      codeUnits.length = 0;
+                  }
+              }
+              return result;
+          }
+      })();
+}
+
 if(String.prototype.codePointAt) {
     h$jsstringSingleton = function(ch) {
         TRACE_JSSTRING("(codePointAt) singleton: " + ch);
@@ -63,7 +113,9 @@ if(String.prototype.codePointAt) {
     h$jsstringUncons = function(str) {
         TRACE_JSSTRING("(codePointAt) uncons: '" + str + "'");
 	var l = str.length;
-	if(l===0) return -1;
+	if(l===0) {
+          RETURN_UBX_TUP2(-1, null);
+        }
 	var ch = str.codePointAt(0);
         if(ch === undefined) {
   	  RETURN_UBX_TUP2(-1, null);
@@ -121,7 +173,9 @@ if(String.prototype.codePointAt) {
     h$jsstringUncons = function(str) {
         TRACE_JSSTRING("(no codePointAt) uncons: '" + str + "'");
 	var l = str.length;
-	if(l===0) return -1;
+	if(l===0) {
+          RETURN_UBX_TUP2(-1, null);
+        }
 	var ch = str.charCodeAt(0);
 	if(IS_HI_SURR(ch)) {
 	  if(l > 1) {
@@ -153,13 +207,13 @@ function h$jsstringPack(xs) {
 	c = CONS_HEAD(xs);
 	a[i++] = UNWRAP_NUMBER(c);
 	if(i >= 60000) {
-	    r += String.fromCharCode.apply(null, a);
+	    r += h$fromCodePoint.apply(null, a);
 	    a = [];
 	    i = 0;
 	}
 	xs = CONS_TAIL(xs);
     }
-    if(i > 0) r += String.fromCharCode.apply(null, a);
+    if(i > 0) r += h$fromCodePoint.apply(null, a);
     TRACE_JSSTRING("pack: '" + r + "'");
     return r;
 }
@@ -189,11 +243,11 @@ function h$jsstringPackArrayReverse(arr) {
 
 function h$jsstringConvertArray(arr) {
     if(arr.length < 60000) {
-	return String.fromCharCode.apply(null, arr);
+	return h$fromCodePoint.apply(null, arr);
     } else {
 	var r = '';
 	for(var i=0; i<arr.length; i+=60000) {
-	    r += String.fromCharCode.apply(null, arr.slice(i, i+60000));
+	    r += h$fromCodePoint.apply(null, arr.slice(i, i+60000));
 	}
 	return r;
     }
@@ -729,6 +783,30 @@ function h$jsstringUnpack(str) {
     return r;
 }
 
+
+
+#if __GLASGOW_HASKELL__ >= 800
+function h$jsstringDecInteger(val) {
+  TRACE_JSSTRING("decInteger");
+  if(IS_INTEGER_S(val)) {
+    return '' + INTEGER_S_DATA(val);
+  } else if(IS_INTEGER_Jp(val)) {
+    return h$ghcjsbn_showBase(INTEGER_J_DATA(val), 10);
+  } else {
+    return '-' + h$ghcjsbn_showBase(INTEGER_J_DATA(val), 10);
+  }
+}
+#else
+function h$jsstringDecInteger(val) {
+  TRACE_JSSTRING("decInteger");
+  if(IS_INTEGER_S(val)) {
+    return '' + INTEGER_S_DATA(val);
+  } else {
+    return INTEGER_J_DATA(val).toString();
+  }
+}
+#endif
+
 function h$jsstringDecI64(hi,lo) {
     TRACE_JSSTRING("decI64: " + hi + " " + lo);
     var lo0 = (lo < 0) ? lo+4294967296:lo;
@@ -759,6 +837,27 @@ function h$jsstringDecW64(hi,lo) {
     var x2  = hi0*4294+Math.floor((x0+lo0-x1)/1000000);
     return '' + x2 + h$jsstringDecIPadded6(x1);
 }
+
+#if __GLASGOW_HASKELL__ >= 800
+function h$jsstringHexInteger(val) {
+  TRACE_JSSTRING("hexInteger");
+  if(IS_INTEGER_S(val)) {
+    return '' + INTEGER_S_DATA(val);
+  } else {
+    // we assume it's nonnegative. this condition is checked by the Haskell code
+    return h$ghcjsbn_showBase(INTEGER_J_DATA(val), 16);
+  }
+}
+#else
+function h$jsstringHexInteger(val) {
+  TRACE_JSSTRING("hexInteger");
+  if(IS_INTEGER_S(val)) {
+    return '' + INTEGER_S_DATA(val);
+  } else {
+    return INTEGER_J_DATA(val).toRadix(16);
+  }
+}
+#endif
 
 function h$jsstringHexI64(hi,lo) {
     var lo0 = lo<0 ? lo+4294967296 : lo;
@@ -980,7 +1079,11 @@ function h$jsstringReadInteger(str) {
   } else if(str.length <= 9) {
     return MK_INTEGER_S(parseInt(str, 10));
   } else {
+#if __GLASGOW_HASKELL__ >= 800
+    return h$ghcjsbn_readInteger(str);
+#else
     return MK_INTEGER_J(new BigInteger(str, 10));
+#endif
   }
 }
 
